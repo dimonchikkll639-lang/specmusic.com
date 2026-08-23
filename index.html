@@ -1,1 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpecMusic Player</title>
+  
+  <!-- Подключение стилей -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Firebase SDK (v8) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+</head>
+<body>
+
+  <!-- ВЕРХНЯЯ ПАНЕЛЬ С КНОПКАМИ ШТОРОК -->
+  <header class="top-bar">
+    <button id="togglePlaylistBtn" class="icon-btn" title="Плейлист">☰</button>
+    <h1 class="logo">SpecMusic</h1>
+    <button id="toggleProfileBtn" class="icon-btn" title="Профиль">👤</button>
+  </header>
+
+  <!-- ОСНОВНОЙ ПЛЕЕР -->
+  <main class="player-container">
+    <div class="cover-wrapper">
+      <img id="cover" src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500" alt="Обложка трека">
+    </div>
+
+    <div class="track-info">
+      <h2 id="title">Загрузка...</h2>
+      <p id="artist">...</p>
+    </div>
+
+    <!-- ПОЛЗУНОК ВРЕМЕНИ -->
+    <div class="progress-container">
+      <span id="currentTime">0:00</span>
+      <input type="range" id="progressBar" value="0" min="0" max="100">
+      <span id="duration">0:00</span>
+    </div>
+
+    <!-- ЭЛЕМЕНТЫ УПРАВЛЕНИЯ -->
+    <div class="controls">
+      <button id="likeBtn" class="control-btn" title="Лайк">
+        <span id="likeImg" class="heart-icon">♥</span>
+      </button>
+      <button id="prevBtn" class="control-btn" title="Предыдущий">⏮</button>
+      <button id="playBtn" class="control-btn play-btn" title="Воспроизведение/Пауза">
+        <img src="https://img.icons8.com/ios-filled/50/000000/play.png" alt="Play">
+      </button>
+      <button id="nextBtn" class="control-btn" title="Следующий">⏭</button>
+      <button id="waveBtn" class="control-btn wave-btn" title="Моя Волна">🌊</button>
+    </div>
+
+    <!-- ГРОМКОСТЬ -->
+    <div class="volume-container">
+      <span>🔈</span>
+      <input type="range" id="volumeBar" min="0" max="100" value="100">
+      <span>🔊</span>
+    </div>
+
+    <!-- Скрытый элемент аудио -->
+    <audio id="audio"></audio>
+  </main>
+
+  <!-- ШТОРКА ПЛЕЙЛИСТА -->
+  <div id="playlistDrawer" class="drawer drawer-left">
+    <div class="drawer-header">
+      <h3>Плейлист</h3>
+      <button id="closePlaylistBtn" class="close-btn">&times;</button>
+    </div>
+    <ul id="trackList" class="track-list"></ul>
+  </div>
+
+  <!-- ШТОРКА ПРОФИЛЯИ АВТОРИЗАЦИИ -->
+  <div id="profileDrawer" class="drawer drawer-right">
+    <div class="drawer-header">
+      <h3>Профиль</h3>
+      <button id="closeProfileBtn" class="close-btn">&times;</button>
+    </div>
+
+    <!-- БЛОК АВТОРИЗАЦИИ (ЕСЛИ НЕ ВОШЕЛ) -->
+    <div id="authBlock" class="auth-block">
+      <div class="auth-tabs">
+        <button id="tabLoginBtn" class="tab-btn active">Вход</button>
+        <button id="tabRegisterBtn" class="tab-btn">Регистрация</button>
+      </div>
+
+      <!-- Форма входа/регистрации -->
+      <form id="authForm" class="auth-form">
+        <input type="text" id="authName" placeholder="Имя" style="display: none;">
+        <input type="email" id="authEmail" placeholder="Email" required>
+        <input type="password" id="authPassword" placeholder="Пароль" required>
+        <button type="submit" id="authSubmitBtn" class="primary-btn">Войти</button>
+      </form>
+
+      <!-- Форма подтверждения кода с почты -->
+      <form id="verifyForm" class="auth-form" style="display: none;">
+        <p class="verify-desc">Код подтверждения отправлен на вашу почту:</p>
+        <input type="text" id="verifyCodeInput" placeholder="4-значный код" required maxlength="4">
+        <button type="submit" class="primary-btn">Подтвердить</button>
+      </form>
+
+      <div class="divider">или</div>
+
+      <!-- Вход через Google -->
+      <button id="google-login-btn" class="google-btn">
+        <img src="https://img.icons8.com/color/16/000000/google-logo.png" alt="Google">
+        Войти через Google
+      </button>
+    </div>
+
+    <!-- БЛОК ПОЛЬЗОВАТЕЛЯ (ЕСЛИ ВОШЕЛ) -->
+    <div id="userInfoBlock" class="user-info-block" style="display: none;">
+      <div class="user-card">
+        <div class="user-details">
+          <h4 id="userName">Пользователь</h4>
+          <p id="userEmail">user@gmail.com</p>
+        </div>
+        <span id="userBadge" class="badge">FREE</span>
+      </div>
+
+      <button id="upgradeBtn" class="upgrade-btn">Купить PREMIUM</button>
+      <button id="logoutBtn" class="logout-btn">Выйти</button>
+    </div>
+  </div>
+
+  <!-- КАСТОМНЫЙ ALERT (ВСПЛЫВАЮЩЕЕ ОКНО УВЕДОМЛЕНИЙ) -->
+  <div id="customAlert" class="custom-alert">
+    <div class="custom-alert-content">
+      <p id="customAlertText">Уведомление</p>
+      <button id="customAlertBtn" class="primary-btn">ОК</button>
+    </div>
+  </div>
+
+  <!-- Подключение логики -->
+  <script src="script.js"></script>
+</body>
+</html>
 
