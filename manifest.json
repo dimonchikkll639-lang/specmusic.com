@@ -10,6 +10,12 @@
   "icons": [
     {
       "src": "https://cdn.imageurlgenerator.com/uploads/4e4bf31a-2674-4368-9eca-cadde2b76f60.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn.imageurlgenerator.com/uploads/4e4bf31a-2674-4368-9eca-cadde2b76f60.jpg",
       "sizes": "512x512",
       "type": "image/jpeg",
       "purpose": "any maskable"
