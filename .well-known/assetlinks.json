@@ -1,1 +1,8 @@
-
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.specmusic",
+        "sha256_cert_fingerprints": ["73:0B:69:68:DE:5D:75:3C:F1:BC:7E:87:69:DE:03:C4:62:99:D9:D7:31:45:76:6E:7D:54:47:F3:46:12:CA:F1"]
+      }
+    }]
