@@ -466,4 +466,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
   font-size: 0.9rem;
   line-height: 1.4;
 }
+/* Пример, если у элемента есть класс или текст */
+[class*="AppMint"], div:has(> *:contains("Made with AppMint")) {
+  display: none !important;
+}
 
