@@ -1,1 +1,19 @@
+{
+  "name": "SpecMusic",
+  "short_name": "SpecMusic",
+  "description": "Твой персональный веб-плеер SpecMusic",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/color/512/000000/disc.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
 
