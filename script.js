@@ -656,4 +656,134 @@ document.addEventListener('DOMContentLoaded', () => {
   // СТАРТОВАЯ ЗАГРУЗКА
   loadTrack(0);
 });
+// ==========================================
+// ИНТЕГРАЦИЯ SUPABASE СУПЕР-ЗАГРУЗКА
+// ==========================================
+
+// 1. Клиент Supabase
+const supabaseUrl = 'https://ghugttcurltqewwejpxk.supabase.co';
+const supabaseKey = 'sb_publishable_Gdb3mxzJ3sJzCZxkl1Ffcw_TXoNX3kg';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+// 2. Функция отправки файла в Supabase Storage
+async function uploadToSupabase(file, folder) {
+  const fileName = `${folder}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+  
+  const { data, error } = await supabaseClient.storage
+    .from('music-files')
+    .upload(fileName, file);
+
+  if (error) throw new Error('Ошибка Supabase: ' + error.message);
+
+  const { data: publicUrlData } = supabaseClient.storage
+    .from('music-files')
+    .getPublicUrl(fileName);
+
+  return publicUrlData.publicUrl;
+}
+
+// 3. Логика кнопки "Загрузить и опубликовать"
+async function handleTrackUpload() {
+  const titleInput = document.getElementById('trackTitleInput');
+  const artistInput = document.getElementById('trackArtistInput');
+  const audioInput = document.getElementById('audioFileInput');
+  const coverInput = document.getElementById('coverFileInput');
+
+  const title = titleInput.value.trim();
+  const artist = artistInput.value.trim();
+  const audioFile = audioInput.files[0];
+  const coverFile = coverInput.files[0];
+
+  if (!title || !artist || !audioFile) {
+    alert("Заполните название, исполнителя и выберите MP3 файл!");
+    return;
+  }
+
+  const submitBtn = document.getElementById('submitUploadBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Отправка в облако...";
+
+  try {
+    // Загрузка аудио
+    const audioUrl = await uploadToSupabase(audioFile, 'tracks');
+
+    // Загрузка обложки (или дефолтная)
+    let coverUrl = "https://cdn.imageurlgenerator.com/uploads/e266cf3a-eb67-4458-aada-04088b4c705c.jpg";
+    if (coverFile) {
+      coverUrl = await uploadToSupabase(coverFile, 'covers');
+    }
+
+    // Сохранение записи в Firestore
+    await db.collection('tracks').add({
+      title: title,
+      artist: artist,
+      src: audioUrl,
+      cover: coverUrl,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert("Трек успешно загружен!");
+    document.getElementById('uploadModal').style.display = 'none';
+
+    // Сброс полей
+    titleInput.value = '';
+    artistInput.value = '';
+    audioInput.value = '';
+    if (coverInput) coverInput.value = '';
+
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Загрузить и опубликовать";
+  }
+}
+
+// 4. Подписка на обновление базы треков
+function listenToCloudPlaylist() {
+  if (typeof db === 'undefined') return;
+
+  db.collection('tracks').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+    const cloudTracks = [];
+    snapshot.forEach(doc => {
+      cloudTracks.push(doc.data());
+    });
+
+    if (cloudTracks.length > 0) {
+      // Подмешиваем или обновляем глобальный плейлист
+      if (typeof playlist !== 'undefined') {
+        playlist.length = 0;
+        playlist.push(...cloudTracks);
+
+        // Переинициализируем плеер
+        if (typeof loadTrack === 'function') {
+          loadTrack(0);
+        }
+      }
+    }
+  });
+}
+
+// 5. Навешивание слушателей событий
+document.addEventListener('DOMContentLoaded', () => {
+  const uploadBtn = document.getElementById('uploadTrackBtn');
+  const uploadModal = document.getElementById('uploadModal');
+  const closeBtn = document.getElementById('closeUploadModal');
+  const submitBtn = document.getElementById('submitUploadBtn');
+
+  if (uploadBtn && uploadModal) {
+    uploadBtn.addEventListener('click', () => uploadModal.style.display = 'flex');
+  }
+  
+  if (closeBtn && uploadModal) {
+    closeBtn.addEventListener('click', () => uploadModal.style.display = 'none');
+  }
+
+  if (submitBtn) {
+    submitBtn.addEventListener('click', handleTrackUpload);
+  }
+
+  listenToCloudPlaylist();
+});
+
 
